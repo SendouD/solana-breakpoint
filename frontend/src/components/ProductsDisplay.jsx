@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Copy, Loader2, Plus } from "lucide-react"
+import { AlertCircle, Cone, Copy, LampDesk, Loader2, Plus } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
+import { Connection,PublicKey,Transaction,SystemProgram,LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js"
 const ProductDisplay = () => {
   const [companyName, setCompanyName] = useState("")
   const [products, setProducts] = useState(null)
@@ -64,50 +64,71 @@ const ProductDisplay = () => {
       setError("Failed to fetch balance. Please try again.")
     }
   }
-
+  
   const addSOLToWallet = async (recipientAddress, productName, flag) => {
-    if (!window.ethereum) {
-      alert("MetaMask is not installed!")
-      return
+    if (!window.solana || !window.solana.isPhantom) {
+      alert("Phantom is not installed!");
+      return;
     }
-
-    const SOLAmount = flag === 0 ? SOLAmounts[productName] : commissionSOLAmounts[productName]
-
+  
+    const SOLAmount = flag === 0 ? SOLAmounts[productName] : commissionSOLAmounts[productName];
+  
     if (!SOLAmount || isNaN(SOLAmount) || Number.parseFloat(SOLAmount) <= 0) {
-      alert("Please enter a valid amount of SOL!")
-      return
+      alert("Please enter a valid amount of SOL!");
+      return;
     }
-
+  
     try {
-      await window.ethereum.request({ method: "ETH_requestAccounts" })
-
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const tx = await signer.sendTransaction({
-        to: recipientAddress,
-        value: ethers.parseSOLer(SOLAmount),
-      })
-
-      alert("Transaction sent! Waiting for confirmation...")
-
-      await tx.wait()
-
-      alert("Transaction successful!")
+      // Connect wallet
+      const resp = await window.solana.connect();
+      const fromWallet = window.solana.publicKey;
+  
+      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+  
+      // Build transaction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: fromWallet,
+          toPubkey: new PublicKey(recipientAddress),
+          lamports: Number(SOLAmount) * LAMPORTS_PER_SOL,
+        })
+      );
+  
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = fromWallet;
+  
+      // Sign transaction
+      const signed = await window.solana.signTransaction(transaction);
+  
+      // Send transaction
+      const signature = await connection.sendRawTransaction(signed.serialize());
+  
+      alert("Transaction sent! Waiting for confirmation...");
+  
+      // Confirm transaction
+      await connection.confirmTransaction(signature, 'confirmed');
+  
+      alert("Transaction successful!");
+  
+      // Reset form
       if (flag === 0) {
-        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }));
       } else {
-        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }));
       }
     } catch (error) {
-      console.error("Transaction failed:", error)
+      console.error("Transaction failed:", error);
       if (flag === 0) {
-        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }));
       } else {
-        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }));
       }
-      alert(`Transaction failed!\nError: ${error.message}`)
+      alert(`Transaction failed!\nError: ${error.message}`);
     }
-  }
+  };
+  
+ 
 
   const copyToClipboard = (text, message = "Copied to clipboard!") => {
     navigator.clipboard.writeText(text).then(
