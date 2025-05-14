@@ -3,6 +3,14 @@ import canonicalize from 'canonicalize';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { parseEther } from 'viem'
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  clusterApiUrl,
+} from '@solana/web3.js';
 
 dotenv.config();
 // Replace this with your private key from the Dashboard
@@ -45,6 +53,7 @@ function getAuthorizationSignature({url, body, method, idempotencyKey}: {url: st
 interface TransactionParams {
   to: string;
   value: number;
+  from:string
 }
 
 interface TransactionResponse {
@@ -55,77 +64,106 @@ interface TransactionResponse {
   };
 }
 
-export default async function sendEthTransaction(walletId: string, transaction: TransactionParams, idempotencyKey: string): Promise<TransactionResponse> {
-  console.log("Starting transaction process...");
-  console.log("Idempotency-key: ", idempotencyKey);
-  
-  const privyAppId = process.env.PRIVY_APP_ID;
-  const privyAppSecret = process.env.PRIVY_APP_SECRET;
-  
-  if (!privyAppId || !privyAppSecret) {
-    throw new Error("Missing Privy credentials in environment variables");
-  }
 
-  const url = `https://api.privy.io/v1/wallets/${walletId}/rpc`;
-  
-  // Base64 encode for basic authentication
-  const authHeader = 'Basic ' + Buffer.from(`${privyAppId}:${privyAppSecret}`).toString('base64');
+export default async function sendSOLTransaction(
+  walletId: string,
+  transaction: TransactionParams,
+  idempotencyKey: string
+): Promise<TransactionResponse> {
+  try {
+    console.log("Starting transaction process...");
+    console.log("Idempotency-key: ", idempotencyKey);
 
-  console.log("transaction value: ", transaction.value);
-  console.log("To Address: ", transaction.to);
-  console.log("wallet Id: ",walletId);
-  const value=parseEther(String(transaction.value));
-  console.log(value);
-  const hexValue = `0x${value.toString(16)}`;
+    const privyAppId = process.env.PRIVY_APP_ID;
+    const privyAppSecret = process.env.PRIVY_APP_SECRET;
 
-
-  const requestBody = {
-    chain_type: "ethereum",
-    method: "eth_sendTransaction",
-    caip2: "eip155:421614",
-    idempotencyKey: idempotencyKey,
-    params: {
-      transaction: {
-        to: transaction.to,
-        value: hexValue,
-        chain_id: 421614
-      }
+    if (!privyAppId || !privyAppSecret) {
+      throw new Error("Missing Privy credentials in environment variables");
     }
-  };
 
-  try {
-    console.log("Request payload:", JSON.stringify(requestBody, null, 2));
-  } catch (error) {
-    console.log(error);
-  }
-  const method='POST'
+    const url = `https://api.privy.io/v1/wallets/${walletId}/rpc`;
+    const authHeader = 'Basic ' + Buffer.from(`${privyAppId}:${privyAppSecret}`).toString('base64');
 
-  const headers = {
-    'privy-app-id': privyAppId,
-    'Content-Type': 'application/json',
-    'Authorization': authHeader,
-    'privy-authorization-signature': getAuthorizationSignature({
-      url,
-      body: requestBody,
-      method,
-      idempotencyKey
-    }),
-    'privy-idempotency-key': idempotencyKey
-  };
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
-  console.log("Header: ", headers);
+    const fromPubkey = new PublicKey(transaction.from); // Ensure this is valid
+    const amountInSol=transaction.value*LAMPORTS_PER_SOL
+    const base64Tx = await buildAndSerializeTransaction(
+      fromPubkey,
+      transaction.to,
+      amountInSol,
+      connection
+    );
 
-  try {
+    const requestBody = {
+      chain_type: "solana",
+      method: "signAndSendTransaction",
+      caip2: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", // Confirm this CAIP2 if needed
+      params: {
+        transaction: base64Tx,
+        encoding:"base64"
+      },
+    };
+
+    const method = 'POST';
+    console.log("fitt")
+
+    const headers = {
+      'privy-app-id': privyAppId,
+      'Content-Type': 'application/json',
+      'Authorization': authHeader,
+      'privy-authorization-signature': getAuthorizationSignature({
+        url,
+        body: requestBody,
+        method,
+        idempotencyKey,
+      }),
+      'privy-idempotency-key': idempotencyKey,
+    };
+    console.log("fitt")
+
+
     const response = await axios.post<TransactionResponse>(url, requestBody, { headers });
+
     console.log('Transaction sent successfully!');
     console.log('Response:', JSON.stringify(response.data, null, 2));
     return response.data;
+
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.log('Error Response:', error.response?.data);
+      console.error('Axios error response:', error.response?.data);
     } else {
       console.error('Unexpected error:', error);
     }
     throw error;
   }
+}
+
+async function buildAndSerializeTransaction(
+  fromPubkey: PublicKey,
+  toPubkey: string,
+  amountInSol: number,
+  connection: Connection
+): Promise<string> {
+  const toPublicKey = new PublicKey(toPubkey);
+  const lamports = amountInSol;
+
+  const transaction = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey,
+      toPubkey: toPublicKey,
+      lamports,
+    })
+  );
+
+  const { blockhash } = await connection.getLatestBlockhash("finalized");
+  transaction.recentBlockhash = blockhash;
+  transaction.feePayer = fromPubkey;
+
+  const serializedTx = transaction.serialize({
+    requireAllSignatures: false, // Leave false if Privy signs it
+    verifySignatures: false,
+  });
+
+  return serializedTx.toString('base64');
 }

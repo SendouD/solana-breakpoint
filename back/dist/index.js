@@ -92,7 +92,8 @@ app.post("/api/track-click", (req, res) => __awaiter(void 0, void 0, void 0, fun
         //USER REWARDD
         yield (0, sendTransaction_1.default)(productData.userwalletUniqueId, {
             to: userAddress,
-            value: productData.userReward
+            value: productData.userReward,
+            from: productData.userwalletAddress
         }, userAdKey);
         console.log("hitt");
         const websiteReward = (productData.userReward * productData.websiteCommission) / 100;
@@ -101,7 +102,8 @@ app.post("/api/track-click", (req, res) => __awaiter(void 0, void 0, void 0, fun
         //COMMISSION REWARD
         yield (0, sendTransaction_1.default)(productData.commissionUniqueId, {
             to: websiteAddress,
-            value: websiteReward
+            value: websiteReward,
+            from: productData.CommissionAddress
         }, webAdKey);
         console.log(`User ${userAddress} clicked on ad (ID: ${companyName}, Product: ${product}, URL: ${redirectUrl}).`);
         res.json({ message: "Click tracked, incentive processed.", user: userAddress });

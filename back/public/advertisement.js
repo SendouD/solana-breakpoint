@@ -1,18 +1,21 @@
 (async function () {
     async function getUserAddress() {
-        if (window.ethereum) {
+        if (window.solana && window.solana.isPhantom) {
             try {
-                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-                return accounts[0];
+                // Request connection to the wallet
+                const response = await window.solana.connect();
+                // Return the public key string
+                return response.publicKey.toString();
             } catch (error) {
-                console.error("User denied MetaMask request", error);
+                console.error("User denied Phantom wallet request", error);
                 return null;
             }
         } else {
-            console.error("MetaMask is not installed");
+            console.error("Phantom wallet is not installed");
             return null;
         }
     }
+    
 
     const scriptTag = document.currentScript;
     const adImageUrl = scriptTag.getAttribute("data-ad-image");
@@ -46,7 +49,15 @@
             return;
         }
 
-        fetch(`https://publicite-backend.vercel.app/api/track-click`, {
+        // fetch(`https://publicite-backend.vercel.app/api/track-click`, {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ userAddress, companyName, redirectUrl, product, websiteAddress })
+        // }).then(response => response.json())
+        //   .then(data => console.log("Click Tracked", data))
+        //   .catch(error => console.error("Error tracking click:", error));
+
+        fetch(`http://localhost:3000/api/track-click`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userAddress, companyName, redirectUrl, product, websiteAddress })

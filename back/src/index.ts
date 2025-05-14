@@ -7,7 +7,7 @@ import Company from "./schema/companyschema";
 import cors from "cors";
 import postPolicy from "./utils/policy";
 import createWallet from "./utils/createWallet";
-import sendTransaction from "./utils/sendTransaction";
+import sendSOLTransaction from "./utils/sendTransaction";
 import axios from "axios";
 import * as fs from 'fs';
 import multer from "multer";
@@ -96,18 +96,20 @@ app.post("/api/track-click", async (req: Request<{}, {}, ClickRequestBody>, res:
 
       const userAdKey = `${userAddress}-${productData.userwalletUniqueId}`;
       //USER REWARDD
-      await sendTransaction(productData.userwalletUniqueId, {
+      await sendSOLTransaction(productData.userwalletUniqueId, {
         to: userAddress,
-        value: productData.userReward
+        value: productData.userReward,
+        from:productData.userwalletAddress
       }, userAdKey);
       console.log("hitt");
       const websiteReward=(productData.userReward*productData.websiteCommission)/100;
       console.log("hitttt")
       const webAdKey = `${websiteAddress}-${userAddress}-${productData.commissionUniqueId}`;
       //COMMISSION REWARD
-      await sendTransaction(productData.commissionUniqueId, {
+      await sendSOLTransaction(productData.commissionUniqueId, {
         to: websiteAddress,
-        value: websiteReward
+        value: websiteReward,
+        from:productData.CommissionAddress
       },webAdKey);
       console.log(`User ${userAddress} clicked on ad (ID: ${companyName}, Product: ${product}, URL: ${redirectUrl}).`);
 
