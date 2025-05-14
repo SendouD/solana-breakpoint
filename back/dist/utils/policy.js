@@ -33,24 +33,22 @@ function postPolicy(userReward) {
         // Read policy from file
         const policyData = {
             "version": "1.0",
-            "name": "T",
-            "chain_type": "ethereum",
-            "method_rules": [{
-                    "method": "eth_sendTransaction",
-                    "rules": [{
-                            "name": "Restrict ETH transfers to a maximum value",
-                            "conditions": [
-                                {
-                                    "field_source": "ethereum_transaction",
-                                    "field": "value",
-                                    "operator": "lte",
-                                    "value": `${value}`
-                                }
-                            ],
-                            "action": "ALLOW"
-                        }]
-                }],
-            "default_action": "DENY"
+            "name": "SOL transfer maximums",
+            "chain_type": "solana",
+            "rules": [{
+                    "name": "Restrict SOL transfers to a maximum value",
+                    "method": "signAndSendTransaction",
+                    "conditions": [
+                        {
+                            // This field_source is used for all System Program instructions.
+                            "field_source": "solana_system_program_instruction",
+                            "field": "Transfer.lamports",
+                            "operator": "lte",
+                            "value": "100000000" // 0.1 SOL 
+                        }
+                    ],
+                    "action": "ALLOW"
+                }]
         };
         // Prepare headers
         const method = 'POST';

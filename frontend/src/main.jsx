@@ -12,9 +12,9 @@ createRoot(document.getElementById('root')).render(
       appId="cm6o64x8s01apu0vkxgr2r1h8"
       config={{
         embeddedWallets: { 
-          ethereum: { 
+          solana:{
             createOnLogin: 'users-without-wallets',
-          }, 
+          }
         }, 
       }}
     >

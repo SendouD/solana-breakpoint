@@ -12,13 +12,12 @@ export default async function createWallet(policyIds: string) {
    const url = 'https://api.privy.io/v1/wallets';
    const authHeader = 'Basic ' + Buffer.from(`${privyAppId}:${privyAppSecret}`).toString('base64');
    const method='POST'
-   const signature = getAuthorizationSignature({ url, body: { chain_type: 'ethereum', policy_ids: [policyIds], authorization_key_ids:[authorizationID]} ,method});
-
+   const signature = getAuthorizationSignature({ url, body: { chain_type: 'solana', policy_ids: [policyIds], authorization_key_ids:[authorizationID]} ,method});
    try {
       const response = await axios.post(
          url,
          {
-            chain_type: 'ethereum',
+            chain_type: 'solana',
             policy_ids: [policyIds],
             authorization_key_ids:[authorizationID]  // Passing policyIds in the request body
          },

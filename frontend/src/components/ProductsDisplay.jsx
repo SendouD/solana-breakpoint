@@ -16,8 +16,8 @@ const ProductDisplay = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [balances, setBalances] = useState({})
   const [commissionBalances, setCommissionBalances] = useState({})
-  const [ethAmounts, setEthAmounts] = useState({})
-  const [commissionEthAmounts, setCommissionEthAmounts] = useState({})
+  const [SOLAmounts, setSOLAmounts] = useState({})
+  const [commissionSOLAmounts, setCommissionSOLAmounts] = useState({})
   const backendapi = import.meta.env.VITE_BACKEND_API
 
   const handleSubmit = async (e) => {
@@ -65,27 +65,27 @@ const ProductDisplay = () => {
     }
   }
 
-  const addEthToWallet = async (recipientAddress, productName, flag) => {
+  const addSOLToWallet = async (recipientAddress, productName, flag) => {
     if (!window.ethereum) {
       alert("MetaMask is not installed!")
       return
     }
 
-    const ethAmount = flag === 0 ? ethAmounts[productName] : commissionEthAmounts[productName]
+    const SOLAmount = flag === 0 ? SOLAmounts[productName] : commissionSOLAmounts[productName]
 
-    if (!ethAmount || isNaN(ethAmount) || Number.parseFloat(ethAmount) <= 0) {
-      alert("Please enter a valid amount of ETH!")
+    if (!SOLAmount || isNaN(SOLAmount) || Number.parseFloat(SOLAmount) <= 0) {
+      alert("Please enter a valid amount of SOL!")
       return
     }
 
     try {
-      await window.ethereum.request({ method: "eth_requestAccounts" })
+      await window.ethereum.request({ method: "ETH_requestAccounts" })
 
       const provider = new ethers.BrowserProvider(window.ethereum)
       const signer = await provider.getSigner()
       const tx = await signer.sendTransaction({
         to: recipientAddress,
-        value: ethers.parseEther(ethAmount),
+        value: ethers.parseSOLer(SOLAmount),
       })
 
       alert("Transaction sent! Waiting for confirmation...")
@@ -94,16 +94,16 @@ const ProductDisplay = () => {
 
       alert("Transaction successful!")
       if (flag === 0) {
-        setEthAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
       } else {
-        setCommissionEthAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
       }
     } catch (error) {
       console.error("Transaction failed:", error)
       if (flag === 0) {
-        setEthAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
       } else {
-        setCommissionEthAmounts((prev) => ({ ...prev, [productName]: "" }))
+        setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: "" }))
       }
       alert(`Transaction failed!\nError: ${error.message}`)
     }
@@ -215,23 +215,23 @@ const ProductDisplay = () => {
                             </div>
                             <p className="text-sm mt-1">
                               Balance:{" "}
-                              {balances[productName] !== undefined ? `${balances[productName]} ETH` : "Loading..."}
+                              {balances[productName] !== undefined ? `${balances[productName]} SOL` : "Loading..."}
                             </p>
                             <div className="flex items-center space-x-2 mt-2">
                               <Input
                                 type="number"
-                                placeholder="ETH amount"
-                                value={ethAmounts[productName] || ""}
-                                onChange={(e) => setEthAmounts((prev) => ({ ...prev, [productName]: e.target.value }))}
+                                placeholder="SOL amount"
+                                value={SOLAmounts[productName] || ""}
+                                onChange={(e) => setSOLAmounts((prev) => ({ ...prev, [productName]: e.target.value }))}
                                 className="w-24"
                               />
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => addEthToWallet(productData.userwalletAddress, productName, 0)}
+                                onClick={() => addSOLToWallet(productData.userwalletAddress, productName, 0)}
                               >
                                 <Plus className="h-4 w-4 mr-1" />
-                                Add ETH
+                                Add SOL
                               </Button>
                             </div>
                           </div>
@@ -264,26 +264,26 @@ const ProductDisplay = () => {
                             <p className="text-sm mt-1">
                               Balance:{" "}
                               {commissionBalances[productName] !== undefined
-                                ? `${commissionBalances[productName]} ETH`
+                                ? `${commissionBalances[productName]} SOL`
                                 : "Loading..."}
                             </p>
                             <div className="flex items-center space-x-2 mt-2">
                               <Input
                                 type="number"
-                                placeholder="ETH amount"
-                                value={commissionEthAmounts[productName] || ""}
+                                placeholder="SOL amount"
+                                value={commissionSOLAmounts[productName] || ""}
                                 onChange={(e) =>
-                                  setCommissionEthAmounts((prev) => ({ ...prev, [productName]: e.target.value }))
+                                  setCommissionSOLAmounts((prev) => ({ ...prev, [productName]: e.target.value }))
                                 }
                                 className="w-24"
                               />
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => addEthToWallet(productData.CommissionAddress, productName, 1)}
+                                onClick={() => addSOLToWallet(productData.CommissionAddress, productName, 1)}
                               >
                                 <Plus className="h-4 w-4 mr-1" />
-                                Add ETH
+                                Add SOL
                               </Button>
                             </div>
                           </div>
@@ -291,7 +291,7 @@ const ProductDisplay = () => {
                       </CardContent>
                       <CardFooter>
                         <p className="text-sm text-gray-500">
-                          User Reward: {productData.userReward} ETH | Website Commission:{" "}
+                          User Reward: {productData.userReward} SOL | Website Commission:{" "}
                           {productData.websiteCommission}%
                         </p>
                       </CardFooter>
