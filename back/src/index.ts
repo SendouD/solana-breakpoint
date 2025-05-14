@@ -14,6 +14,7 @@ import multer from "multer";
 import FormData from "form-data";
 import updatePolicy from "./utils/updatePolicy";
 import sendwebtransaction from "./utils/sendwebsiteTransaction";
+import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 const upload = multer();
 const allowedOrigin = process.env.FRONTEND_URL;
@@ -228,24 +229,39 @@ app.get("/api/get-products/:companyName", async (req: Request, res: Response): P
   }
 });
 
+
 app.get("/api/get-balance/:walletAddress", async (req: Request, res: Response): Promise<any> => {
   try {
-      const { walletAddress } = req.params;
-      const url = `https://api-sepolia.arbiscan.io/api?module=account&action=balance&address=${walletAddress}&tag=latest&apikey=${process.env.ARBISCAN_API_KEY}`;
+    const { walletAddress } = req.params;
 
-      const response = await axios.get(url);
-      const data = response.data;
-
-      if (data.status !== "1") {
-          return res.status(400).json({ error: "Failed to fetch balance" });
+    // Validate the public key format
+    let pubkey: PublicKey;
+    try {
+      pubkey = new PublicKey(walletAddress);
+      if (!PublicKey.isOnCurve(pubkey.toBuffer())) {
+        throw new Error("Invalid public key");
       }
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid Solana wallet address" });
+    }
 
-      const balanceInEth = (parseFloat(data.result) / 1e18).toString();
+    // Create connection to Solana cluster (change to 'mainnet-beta' if needed)
+    const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-      return res.status(200).json({ address: walletAddress, balance: balanceInEth });
+    // Fetch balance in lamports
+    const balanceLamports = await connection.getBalance(pubkey);
+
+    // Convert to SOL
+    const balanceInSOL = balanceLamports / LAMPORTS_PER_SOL;
+
+    return res.status(200).json({
+      address: walletAddress,
+      balance: balanceInSOL.toString(),
+    });
+
   } catch (error) {
-      console.error("Error fetching balance:", error);
-      return res.status(500).json({ error: "Failed to fetch balance" });
+    console.error("Error fetching Solana balance:", error);
+    return res.status(500).json({ error: "Failed to fetch balance" });
   }
 });
 app.patch("/api/update-policy",async(req: Request, res: Response): Promise<any>=>{

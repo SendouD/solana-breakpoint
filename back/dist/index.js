@@ -31,9 +31,9 @@ const companyschema_1 = __importDefault(require("./schema/companyschema"));
 const policy_1 = __importDefault(require("./utils/policy"));
 const createWallet_1 = __importDefault(require("./utils/createWallet"));
 const sendTransaction_1 = __importDefault(require("./utils/sendTransaction"));
-const axios_1 = __importDefault(require("axios"));
 const multer_1 = __importDefault(require("multer"));
 const updatePolicy_1 = __importDefault(require("./utils/updatePolicy"));
+const web3_js_1 = require("@solana/web3.js");
 const upload = (0, multer_1.default)();
 const allowedOrigin = process.env.FRONTEND_URL;
 dotenv_1.default.config();
@@ -212,17 +212,30 @@ app.get("/api/get-products/:companyName", (req, res) => __awaiter(void 0, void 0
 app.get("/api/get-balance/:walletAddress", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { walletAddress } = req.params;
-        const url = `https://api-sepolia.arbiscan.io/api?module=account&action=balance&address=${walletAddress}&tag=latest&apikey=${process.env.ARBISCAN_API_KEY}`;
-        const response = yield axios_1.default.get(url);
-        const data = response.data;
-        if (data.status !== "1") {
-            return res.status(400).json({ error: "Failed to fetch balance" });
+        // Validate the public key format
+        let pubkey;
+        try {
+            pubkey = new web3_js_1.PublicKey(walletAddress);
+            if (!web3_js_1.PublicKey.isOnCurve(pubkey.toBuffer())) {
+                throw new Error("Invalid public key");
+            }
         }
-        const balanceInEth = (parseFloat(data.result) / 1e18).toString();
-        return res.status(200).json({ address: walletAddress, balance: balanceInEth });
+        catch (e) {
+            return res.status(400).json({ error: "Invalid Solana wallet address" });
+        }
+        // Create connection to Solana cluster (change to 'mainnet-beta' if needed)
+        const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)('devnet'), 'confirmed');
+        // Fetch balance in lamports
+        const balanceLamports = yield connection.getBalance(pubkey);
+        // Convert to SOL
+        const balanceInSOL = balanceLamports / web3_js_1.LAMPORTS_PER_SOL;
+        return res.status(200).json({
+            address: walletAddress,
+            balance: balanceInSOL.toString(),
+        });
     }
     catch (error) {
-        console.error("Error fetching balance:", error);
+        console.error("Error fetching Solana balance:", error);
         return res.status(500).json({ error: "Failed to fetch balance" });
     }
 }));
