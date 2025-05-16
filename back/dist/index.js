@@ -74,17 +74,22 @@ app.post("/api/track-click", (req, res) => __awaiter(void 0, void 0, void 0, fun
             res.status(400).json({ error: "User address is required" });
             return;
         }
+        console.log("here");
+        console.log("here" + companyName);
         let company = yield companyschema_1.default.findOne({ companyName: companyName });
         if (!company) {
+            console.log("no company found");
             res.status(404).json({ error: "Company not found" });
             return;
         }
         const productData = (_a = company.products) === null || _a === void 0 ? void 0 : _a.get(product);
         if (!productData) {
+            console.log("no product data found");
             res.status(404).json({ error: "Product not found" });
             return;
         }
         if (productData.productUrl !== redirectUrl) {
+            console.log("redirectUrl != productData.productUrl");
             res.status(400).json({ error: "Redirect URL does not match the product URL" });
             return;
         }
@@ -252,6 +257,7 @@ app.get("/api/get-balance/:walletAddress", (req, res) => __awaiter(void 0, void 
             }
         }
         catch (e) {
+            console.log(e);
             return res.status(400).json({ error: "Invalid Solana wallet address" });
         }
         // Create connection to Solana cluster (change to 'mainnet-beta' if needed)

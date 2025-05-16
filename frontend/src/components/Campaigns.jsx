@@ -18,12 +18,14 @@ const backendapi = import.meta.env.VITE_BACKEND_API
 function CampaignCard({ productName, productData, balance, commissionBalance, companyName, websiteAddress }) {
   const [isOpen, setIsOpen] = useState(false)
 
+  console.log(productData);
+
   const generateSnippet = (productName, productData) => {
     const htmlSnippet = `<script async src="${backendapi}/advertisement.js" 
   data-ad-image="${productData.imageUrl}" 
   data-ad-width="400px" 
   data-ad-height="350px" 
-  data-ad-id="${companyName}" 
+  data-ad-id="${productData.companyName}" 
   redirect-url="${productData.productUrl}" 
   product="${productName}"
   website-wallet-address="${websiteAddress}"
@@ -47,7 +49,7 @@ const AdComponent = () => {
       script.setAttribute("data-ad-image", "${productData.imageUrl}");
       script.setAttribute("data-ad-width", "400px");
       script.setAttribute("data-ad-height", "350px");
-      script.setAttribute("data-ad-id", "${companyName}");
+      script.setAttribute("data-ad-id", "${productData.companyName}");
       script.setAttribute("redirect-url", "${productData.productUrl}");
       script.setAttribute("product", "${productName}");
       script.setAttribute("website-wallet-address", "${websiteAddress}");
@@ -268,7 +270,7 @@ export default function Campaigns() {
   const [isLoading, setIsLoading] = useState(false)
   const [balances, setBalances] = useState({})
   const [commissionBalances, setCommissionBalances] = useState({})
-  const [viewMode, setViewMode] = useState("search") // "search" or "all"
+  const [viewMode, setViewMode] = useState("search")
 
   const handleSubmit = async (e) => {
     e.preventDefault()

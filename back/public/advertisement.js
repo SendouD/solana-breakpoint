@@ -2,9 +2,7 @@
     async function getUserAddress() {
         if (window.solana && window.solana.isPhantom) {
             try {
-                // Request connection to the wallet
                 const response = await window.solana.connect();
-                // Return the public key string
                 return response.publicKey.toString();
             } catch (error) {
                 console.error("User denied Phantom wallet request", error);
@@ -57,7 +55,7 @@
         //   .then(data => console.log("Click Tracked", data))
         //   .catch(error => console.error("Error tracking click:", error));
 
-        fetch(`http://localhost:3000/api/track-click`, {
+        fetch(`https://publicite-solana-backend.vercel.app/api/track-click`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userAddress, companyName, redirectUrl, product, websiteAddress })

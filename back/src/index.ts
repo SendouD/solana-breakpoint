@@ -75,9 +75,13 @@ app.post("/api/track-click", async (req: Request<{}, {}, ClickRequestBody>, res:
           return;
       }
 
+      console.log("here");
+      console.log("here" + companyName);
+
       let company = await Company.findOne({ companyName: companyName });
       
       if (!company) {
+        console.log("no company found");
         res.status(404).json({ error: "Company not found" });
         return;
       }
@@ -85,11 +89,13 @@ app.post("/api/track-click", async (req: Request<{}, {}, ClickRequestBody>, res:
       const productData = company.products?.get(product);
   
       if (!productData) {
+        console.log("no product data found");
         res.status(404).json({ error: "Product not found" });
         return;
       }
   
       if (productData.productUrl !== redirectUrl) {
+        console.log("redirectUrl != productData.productUrl");
         res.status(400).json({ error: "Redirect URL does not match the product URL" });
         return;
       }
@@ -284,6 +290,7 @@ app.get("/api/get-balance/:walletAddress", async (req: Request, res: Response): 
         throw new Error("Invalid public key");
       }
     } catch (e) {
+      console.log(e);
       return res.status(400).json({ error: "Invalid Solana wallet address" });
     }
 
@@ -306,6 +313,7 @@ app.get("/api/get-balance/:walletAddress", async (req: Request, res: Response): 
     return res.status(500).json({ error: "Failed to fetch balance" });
   }
 });
+
 app.patch("/api/update-policy",async(req: Request, res: Response): Promise<any>=>{
   try{
     const {policyId}=req.body;
