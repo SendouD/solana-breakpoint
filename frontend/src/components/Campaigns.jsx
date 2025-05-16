@@ -154,7 +154,7 @@ export default AdComponent;`
                   </div>
                   <div className="text-sm">
                     Balance:{" "}
-                    <span className="font-medium">{balance !== undefined ? `${balance} ETH` : "Loading..."}</span>
+                    <span className="font-medium">{balance !== undefined ? `${balance} SOL` : "Loading..."}</span>
                   </div>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default AdComponent;`
                   <div className="text-sm">
                     Balance:{" "}
                     <span className="font-medium">
-                      {commissionBalance !== undefined ? `${commissionBalance} ETH` : "Loading..."}
+                      {commissionBalance !== undefined ? `${commissionBalance} SOL` : "Loading..."}
                     </span>
                   </div>
                 </div>
