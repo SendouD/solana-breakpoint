@@ -49,7 +49,7 @@ const AdComponent = () => {
       script.setAttribute("data-ad-image", "${productData.imageUrl}");
       script.setAttribute("data-ad-width", "400px");
       script.setAttribute("data-ad-height", "350px");
-      script.setAttribute("data-ad-id", "${productData.companyName}");
+      script.setAttribute("data-ad-id", "${productData.companyName || companyName}");
       script.setAttribute("redirect-url", "${productData.productUrl}");
       script.setAttribute("product", "${productName}");
       script.setAttribute("website-wallet-address", "${websiteAddress}");
