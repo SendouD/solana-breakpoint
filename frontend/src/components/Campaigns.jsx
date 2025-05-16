@@ -25,7 +25,7 @@ function CampaignCard({ productName, productData, balance, commissionBalance, co
   data-ad-image="${productData.imageUrl}" 
   data-ad-width="400px" 
   data-ad-height="350px" 
-  data-ad-id="${productData.companyName}" 
+  data-ad-id="${productData.companyName || companyName}" 
   redirect-url="${productData.productUrl}" 
   product="${productName}"
   website-wallet-address="${websiteAddress}"
