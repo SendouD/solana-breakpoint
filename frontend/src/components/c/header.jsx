@@ -20,7 +20,7 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-green-700">
-              Summer
+              Publi-cité
             </span>
           </Link>
 
