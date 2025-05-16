@@ -6,7 +6,7 @@ import AddProduct from "./components/AddProduct"
 import Home from "./components/Home"
 import ProductDisplay from './components/ProductsDisplay';
 import LandingPage from './components/landingPage';
-import { Header } from './components/c/header';
+import Header from './components/c/header';
 import LoginPage from './LoginPage';
 import Campaigns from './components/Campaigns';
 

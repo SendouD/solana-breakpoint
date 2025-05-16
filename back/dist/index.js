@@ -211,6 +211,35 @@ app.get("/api/get-products/:companyName", (req, res) => __awaiter(void 0, void 0
         return res.status(500).json({ error: "Failed to fetch products" });
     }
 }));
+app.get("/api/get-products", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const companies = yield companyschema_1.default.find({}).lean();
+        if (!companies || companies.length === 0) {
+            return res.status(400).json({ message: "No companies exist" });
+        }
+        const result = companies.map((company) => {
+            const filteredProducts = {};
+            if (company.products && typeof company.products === "object") {
+                for (const [key, product] of Object.entries(company.products)) {
+                    const _a = product, { userwalletUniqueId, userpolicyId, commissionpolicyId, commissionUniqueId } = _a, filteredProduct = __rest(_a, ["userwalletUniqueId", "userpolicyId", "commissionpolicyId", "commissionUniqueId"]);
+                    filteredProducts[key] = filteredProduct;
+                }
+            }
+            return {
+                companyName: company.companyName,
+                products: filteredProducts,
+            };
+        });
+        return res.status(200).json({
+            message: "Products fetched successfully!",
+            data: result,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching products:", error);
+        return res.status(500).json({ error: "Failed to fetch products" });
+    }
+}));
 app.get("/api/get-balance/:walletAddress", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { walletAddress } = req.params;

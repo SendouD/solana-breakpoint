@@ -231,6 +231,46 @@ app.get("/api/get-products/:companyName", async (req: Request, res: Response): P
   }
 });
 
+app.get("/api/get-products", async (req: Request, res: Response): Promise<any> => {
+  try {
+    const companies = await Company.find({}).lean();
+
+    if (!companies || companies.length === 0) {
+      return res.status(400).json({ message: "No companies exist" });
+    }
+
+    const result = companies.map((company) => {
+      const filteredProducts: Record<string, any> = {};
+
+      if (company.products && typeof company.products === "object") {
+        for (const [key, product] of Object.entries(company.products)) {
+          const {
+            userwalletUniqueId,
+            userpolicyId,
+            commissionpolicyId,
+            commissionUniqueId,
+            ...filteredProduct
+          } = product as any;
+
+          filteredProducts[key] = filteredProduct;
+        }
+      }
+
+      return {
+        companyName: company.companyName,
+        products: filteredProducts,
+      };
+    });
+
+    return res.status(200).json({
+      message: "Products fetched successfully!",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
 
 app.get("/api/get-balance/:walletAddress", async (req: Request, res: Response): Promise<any> => {
   try {
